@@ -4,7 +4,9 @@ Dataset: [H-1B Visa Petitions 2011-2016](https://www.kaggle.com/nsharan/h-1b-vis
 
 Testing without Hadoop
 
-$ ```head -n 5 h1b_kaggle.csv | python group_by_mapper.py 5 6 | sort -k1,1 | python reducer.py```
+$ ```head -n 5 h1b_kaggle.csv | python group_by_mapper.py 5 6 | sort -k1,1 | python value_summation_reducer.py```
+
+*Requires python 3+*
 
 
 **group_by_mapper** 
