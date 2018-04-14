@@ -2,45 +2,46 @@ import os
 
 # os.popen: returns terminal output after execution
 
-def output_fetch(output_dir, output_file='part-r-00000'):
+def output_fetch(output_dir, output_file='part*', hadoop_path='hadoop'):
     """
     :param output: name of the output directory in hadoop
     :return: returns the data as dict
     """
 
-    data_fetch_command = """
-        hadoop fs -cat {output_dir}/{output_file}
-    """.format(output_dir=output_dir,output_file=output_file)
+    data_fetch_command = """{hadoop_path} fs -cat {output_dir}/{output_file}""".format(output_dir=output_dir,output_file=output_file,hadoop_path=hadoop_path)
 
-    data = os.popen(data_fetch_command).read().split('\n')
+    data = os.popen(data_fetch_command).read()
 
+    print('output\n',data_fetch_command,'\n',data)
+    data = data.split('\n')
     result = {}
-    for key, value in [i.split('\t') for i in data]:
+    for key, value in [i.split('\t') for i in data if len(i)>0]:
         result[key] = value
     return result
 
-def directory_exists(dir_name):
+def directory_exists(dir_name, hadoop_path='hadoop'):
     """
     :param dir_name: name of directory on hdfs
     :return: True if directory exists
     """
-
-    command = "hadoop fs -ls | grep '{name}'".format(name = dir_name)
-
+    command = "{hadoop_path} fs -ls | grep '{name}'".format(name = dir_name,hadoop_path=hadoop_path)
     output = os.popen(command).read()
+    print('searching directory',command,len(output))
 
-    return True if len(output) else False
+    return True if len(output) > 0 else False
 
 count = 0
 
-def find_unique_output_dir(desired_name='output'):
+def find_unique_output_dir(desired_name='output',hadoop_path='hadoop'):
     global count
     name = desired_name
 
+    print('finding unique ')
+
     while True:
         name = desired_name + str(count)
-        if not directory_exists(directory_exists):
-            return desired_name
+        if not directory_exists(name, hadoop_path=hadoop_path):
+            return name
         count +=1
 
 def execute(data, mapper, reducer, hadoop_path = 'bin/hadoop', streaming_path = 'contrib/streaming/hadoop-*streaming*.jar' ,mapper_arguments=None, reducer_arguments=None, output = 'output'):
@@ -54,8 +55,10 @@ def execute(data, mapper, reducer, hadoop_path = 'bin/hadoop', streaming_path = 
     :return:
     """
 
-    if directory_exists(output):
-        output = find_unique_output_dir(output)
+    if directory_exists(output,hadoop_path=hadoop_path):
+        print('directory exists', output)
+
+        output = find_unique_output_dir(output,hadoop_path=hadoop_path)
 
     if mapper_arguments:
         mapper_arguments = [str(i) for i in mapper_arguments]
@@ -80,7 +83,7 @@ def execute(data, mapper, reducer, hadoop_path = 'bin/hadoop', streaming_path = 
 
     os.popen(command)
 
-    return output_fetch(output)
+    return output_fetch(output, hadoop_path=hadoop_path)
 
 
 """
