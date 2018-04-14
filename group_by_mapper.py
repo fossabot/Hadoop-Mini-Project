@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import sys
 import csv
 # input comes from STDIN (standard input)
